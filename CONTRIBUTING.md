@@ -9,8 +9,8 @@ Thank you for your interest in contributing to **SNAP**! We welcome contribution
 1. **Prerequisites**: Node.js v18+ and npm installed.
 2. **Clone & Install**:
    ```bash
-   git clone https://github.com/funmu/substack-snap.git
-   cd substack-snap
+   git clone https://github.com/funmu/snap.git
+   cd snap
    npm install
    ```
 3. **Link CLI Locally**:
@@ -46,5 +46,5 @@ npm run build
 
 ## 🐞 Reporting Bugs & Feature Requests
 
-- Please use [GitHub Issues](https://github.com/funmu/substack-snap/issues) to report bugs or submit feature requests.
+- Please use [GitHub Issues](https://github.com/funmu/snap/issues) to report bugs or submit feature requests.
 - Provide step-by-step reproduction steps for bug reports.

@@ -29,8 +29,8 @@ Designed as an open-source tool with a decoupled storage engine, SNAP stores all
 Clone the repository and link the CLI executable globally:
 
 ```bash
-git clone https://github.com/funmu/substack-snap.git
-cd substack-snap
+git clone https://github.com/funmu/snap.git
+cd snap
 npm install
 npm link
 ```
@@ -176,7 +176,7 @@ export SNAP_DATA_DIR="./my-data"
 In addition to the CLI, SNAP can be imported directly into Node.js, Express, Next.js, or React applications:
 
 ```typescript
-import { FileStorageAdapter, ingestRawInventory, buildTopicClusters } from 'substack-snap';
+import { FileStorageAdapter, ingestRawInventory, buildTopicClusters } from 'snap';
 
 // Load or ingest notes programmatically
 const notes = ingestRawInventory('samples/sample_notes.json');

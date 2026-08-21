@@ -26,12 +26,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/funmu/substack-snap.git"
+    "url": "git+https://github.com/funmu/snap.git"
   },
   "bugs": {
-    "url": "https://github.com/funmu/substack-snap/issues"
+    "url": "https://github.com/funmu/snap/issues"
   },
-  "homepage": "https://github.com/funmu/substack-snap#readme",
+  "homepage": "https://github.com/funmu/snap#readme",
   "devDependencies": {
     "@types/node": "^20.10.0",
     "typescript": "^5.3.0"
