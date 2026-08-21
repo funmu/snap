@@ -97,14 +97,21 @@ export interface TopicCluster {
 
 Substack Notes does not have an official open developer API key system. SNAP uses authenticated web HTTP requests with Substack session credentials.
 
+### Environment Variables & Session Resolution
+SNAP resolves credentials in the following resolution order:
+1. Shell Environment Variables (`SUBSTACK_SESSION_ID` & `SUBSTACK_HANDLE`)
+2. Local `.env` file in execution directory, `~/.snap/.env`, or project root
+3. Hidden user configuration file in `~/.snap/config.json`
+
 ### Obtaining the Session Token
 1. Log into Substack (`https://substack.com`) in your browser.
 2. Open Chrome Developer Tools (`Cmd + Option + I`).
 3. Select **Application** -> **Cookies** -> `https://substack.com`.
 4. Copy the value of cookie `substack.sid`.
 5. Run `snap auth --set <your_token>` or store in `.env`:
-   ```bash
-   SUBSTACK_SESSION_ID=s%3A...
+   ```env
+   SUBSTACK_SESSION_ID="s%3A..."
+   SUBSTACK_HANDLE="yourusername"
    ```
 
 ### Request Headers & Endpoint

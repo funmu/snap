@@ -115,22 +115,46 @@ snap create --body "Stripe and OpenRouter are building the financial rail for AI
 
 ---
 
-## 🔑 Authentication Guide (`substack.sid`)
+## 🔑 Environment Variables & Authentication Guide (`substack.sid`)
 
-To publish live notes and sync private stats:
+To publish live notes and sync private stats, SNAP resolves credentials in the following resolution order:
+1. Shell Environment Variables (`SUBSTACK_SESSION_ID` & `SUBSTACK_HANDLE`)
+2. Local `.env` file in execution directory, `~/.snap/.env`, or project root
+3. Hidden user configuration file in `~/.snap/config.json`
+
+### Environment Variable Schema
+
+| Variable | Required | Description | Example |
+| :--- | :--- | :--- | :--- |
+| `SUBSTACK_SESSION_ID` | Yes (for live posting) | Substack `substack.sid` session cookie string | `s%3A...` |
+| `SUBSTACK_HANDLE` | Optional | Your Substack account handle | `yourusername` |
+| `SNAP_DATA_DIR` | Optional | Custom data store directory (defaults to `~/.snap`) | `./my-data` |
+
+### How to get your session cookie:
 1. Log into `https://substack.com` in Google Chrome.
 2. Open Chrome Developer Tools (`Cmd + Option + I`).
 3. Select **Application** -> **Cookies** -> `https://substack.com`.
 4. Locate cookie `substack.sid` and copy its value (starts with `s%3A...`).
-5. Configure SNAP:
-   ```bash
-   snap auth --set "s%3A..." --handle "yourusername"
-   ```
-   Or export environment variables:
-   ```bash
-   export SUBSTACK_SESSION_ID="s%3A..."
-   export SUBSTACK_HANDLE="yourusername"
-   ```
+
+### How to configure:
+
+**Option A: Local or User `.env` file**:
+Create a `.env` file in your current directory or in `~/.snap/.env`:
+```env
+SUBSTACK_SESSION_ID="s%3A..."
+SUBSTACK_HANDLE="yourusername"
+```
+
+**Option B: CLI command**:
+```bash
+snap auth --set "s%3A..." --handle "yourusername"
+```
+
+**Option C: Shell Export**:
+```bash
+export SUBSTACK_SESSION_ID="s%3A..."
+export SUBSTACK_HANDLE="yourusername"
+```
 
 ---
 

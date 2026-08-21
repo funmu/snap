@@ -15,10 +15,34 @@ export function getConfigPath(customDataDir?: string): string {
   return path.join(dataDir, 'config.json');
 }
 
+function parseEnvFile(filePath: string): Record<string, string> {
+  const envVars: Record<string, string> = {};
+  if (fs.existsSync(filePath)) {
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      content.split('\n').forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+          const eqIdx = trimmed.indexOf('=');
+          const key = trimmed.substring(0, eqIdx).trim();
+          let val = trimmed.substring(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.substring(1, val.length - 1);
+          }
+          envVars[key] = val;
+        }
+      });
+    } catch {
+      // Ignore read errors
+    }
+  }
+  return envVars;
+}
+
 export function loadConfig(customDataDir?: string): SNAPConfig {
   let config: SNAPConfig = {};
 
-  // Check environment variables first
+  // 1. Check process.env first
   if (process.env.SUBSTACK_SESSION_ID) {
     config.substack_session_id = process.env.SUBSTACK_SESSION_ID;
   }
@@ -26,12 +50,33 @@ export function loadConfig(customDataDir?: string): SNAPConfig {
     config.substack_handle = process.env.SUBSTACK_HANDLE;
   }
 
-  // Fallback to local user config file in hidden directory
+  // 2. Parse .env files if process.env variables are missing
+  const dataDir = customDataDir ? path.resolve(customDataDir) : getDefaultDataDir();
+  const envPathsToTry = [
+    path.join(process.cwd(), '.env'),
+    path.join(dataDir, '.env'),
+    path.join(__dirname, '../.env')
+  ];
+
+  for (const envPath of envPathsToTry) {
+    const envVars = parseEnvFile(envPath);
+    if (!config.substack_session_id && envVars.SUBSTACK_SESSION_ID) {
+      config.substack_session_id = envVars.SUBSTACK_SESSION_ID;
+    }
+    if (!config.substack_handle && envVars.SUBSTACK_HANDLE) {
+      config.substack_handle = envVars.SUBSTACK_HANDLE;
+    }
+  }
+
+  // 3. Fallback to local user config file in hidden directory (~/.snap/config.json)
   const configPath = getConfigPath(customDataDir);
   if (fs.existsSync(configPath)) {
     try {
       const fileData = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      config = { ...fileData, ...config };
+      config = {
+        substack_session_id: config.substack_session_id || fileData.substack_session_id,
+        substack_handle: config.substack_handle || fileData.substack_handle
+      };
     } catch {
       // Ignore JSON parse errors
     }
