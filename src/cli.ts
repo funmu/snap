@@ -4,7 +4,7 @@ import * as os from 'os';
 import { ingestRawInventory } from './ingest';
 import { buildTopicClusters, formatClusterSummary } from './topics';
 import { getAuthInstructions, saveSessionToken, loadConfig } from './auth';
-import { publishNoteToSubstack } from './publisher';
+import { publishNoteToSubstack, deleteNoteFromSubstack } from './publisher';
 import { FileStorageAdapter, StorageAdapter } from './store';
 
 function formatHomePath(p: string): string {
@@ -122,20 +122,65 @@ async function main() {
       break;
     }
 
+    case 'delete': {
+      const targetId = args[1] && !args[1].startsWith('--') ? args[1] : null;
+      const isLocalOnly = args.includes('--local-only');
+
+      if (!targetId) {
+        console.log(`💡 Usage: snap delete <note_id> [--local-only]`);
+        console.log(`   Example: snap delete c-319089287`);
+        return;
+      }
+
+      // Perform API deletion unless --local-only is specified
+      if (!isLocalOnly) {
+        const deleteRes = await deleteNoteFromSubstack(targetId);
+        if (!deleteRes.success) {
+          console.log(`⚠️ API deletion warning: ${deleteRes.message}`);
+        }
+      }
+
+      // Update local storage database
+      const db = await storage.loadDB();
+      const initialCount = db.notes.length;
+      const cleanTargetId = targetId.replace(/^note-/, '');
+      db.notes = db.notes.filter(n => n.id !== targetId && n.id !== cleanTargetId && n.id !== `c-${cleanTargetId}`);
+
+      if (db.notes.length < initialCount) {
+        await storage.saveDB(db);
+        console.log(`✅ Removed note [${targetId}] from local SNAP database.`);
+      } else {
+        console.log(`💡 Note [${targetId}] was not found in local database.`);
+      }
+      break;
+    }
+
     case 'auth': {
       const setIdx = args.indexOf('--set');
       const handleIdx = args.indexOf('--handle');
+      const showGuide = args.includes('--guide') || args.includes('--help');
 
       if (setIdx !== -1 && args[setIdx + 1]) {
         const handleVal = handleIdx !== -1 ? args[handleIdx + 1] : undefined;
         saveSessionToken(args[setIdx + 1], handleVal, storage.getDataDir());
       } else {
-        console.log(getAuthInstructions());
         const config = loadConfig(storage.getDataDir());
-        if (config.substack_session_id) {
-          console.log(`\n🔒 Current Session Token: configured (${config.substack_session_id.substring(0, 10)}...)`);
+        if (config.substack_session_id && !showGuide) {
+          console.log(`\n🔒 Authentication Status : CONFIGURED`);
+          if (config.substack_handle) {
+            const handleDisplay = config.substack_handle.startsWith('@') ? config.substack_handle : `@${config.substack_handle}`;
+            console.log(`👤 Substack Handle        : ${handleDisplay}`);
+          }
+          console.log(`🔑 Session Cookie        : ${config.substack_session_id.substring(0, 12)}...`);
+          console.log(`\n💡 To update token, run: snap auth --set "<new_token>" [--handle "<handle>"]`);
+          console.log(`   To view step-by-step browser DevTools guide, run: snap auth --guide`);
         } else {
-          console.log(`\n⚠️ Current Session Token: Not configured`);
+          console.log(getAuthInstructions());
+          if (config.substack_session_id) {
+            console.log(`\n🔒 Current Session Token: configured (${config.substack_session_id.substring(0, 12)}...)`);
+          } else {
+            console.log(`\n⚠️ Current Session Token: Not configured`);
+          }
         }
       }
       break;
@@ -199,6 +244,7 @@ Available Commands:
   ${binName} list [--topic T]      List notes inventory with filters
   ${binName} topics                Display topic clusters & future post ideas
   ${binName} create --body "..."   Draft/preview or publish a new note
+  ${binName} delete <note_id>      Delete a note by ID (from Substack & DB)
   ${binName} auth [--set TOKEN]    View auth instructions or set substack.sid
   ${binName} config [--json]       Emit current SNAP configuration & store state
   ${binName} export                Export SNAP inventory & topic cards

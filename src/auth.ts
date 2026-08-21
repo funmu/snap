@@ -42,7 +42,7 @@ function parseEnvFile(filePath: string): Record<string, string> {
 export function loadConfig(customDataDir?: string): SNAPConfig {
   let config: SNAPConfig = {};
 
-  // 1. Check process.env first
+  // 1. Check process.env first (explicit shell environment variables)
   if (process.env.SUBSTACK_SESSION_ID) {
     config.substack_session_id = process.env.SUBSTACK_SESSION_ID;
   }
@@ -50,7 +50,23 @@ export function loadConfig(customDataDir?: string): SNAPConfig {
     config.substack_handle = process.env.SUBSTACK_HANDLE;
   }
 
-  // 2. Parse .env files if process.env variables are missing
+  // 2. Check local user config file in hidden directory (~/.snap/config.json)
+  const configPath = getConfigPath(customDataDir);
+  if (fs.existsSync(configPath)) {
+    try {
+      const fileData = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      if (!config.substack_session_id && fileData.substack_session_id) {
+        config.substack_session_id = fileData.substack_session_id;
+      }
+      if (!config.substack_handle && fileData.substack_handle) {
+        config.substack_handle = fileData.substack_handle;
+      }
+    } catch {
+      // Ignore JSON parse errors
+    }
+  }
+
+  // 3. Fallback to .env files if credentials are still missing
   const dataDir = customDataDir ? path.resolve(customDataDir) : getDefaultDataDir();
   const envPathsToTry = [
     path.join(process.cwd(), '.env'),
@@ -68,33 +84,49 @@ export function loadConfig(customDataDir?: string): SNAPConfig {
     }
   }
 
-  // 3. Fallback to local user config file in hidden directory (~/.snap/config.json)
-  const configPath = getConfigPath(customDataDir);
-  if (fs.existsSync(configPath)) {
-    try {
-      const fileData = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      config = {
-        substack_session_id: config.substack_session_id || fileData.substack_session_id,
-        substack_handle: config.substack_handle || fileData.substack_handle
-      };
-    } catch {
-      // Ignore JSON parse errors
-    }
-  }
-
   return config;
 }
 
 export function saveSessionToken(token: string, handle?: string, customDataDir?: string): void {
-  const config = loadConfig(customDataDir);
-  config.substack_session_id = token.trim();
-  if (handle) {
-    config.substack_handle = handle;
+  const cleanToken = token.trim();
+  const configPath = getConfigPath(customDataDir);
+  
+  let existingConfig: SNAPConfig = {};
+  if (fs.existsSync(configPath)) {
+    try {
+      existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    } catch {}
   }
 
-  const configPath = getConfigPath(customDataDir);
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
+  existingConfig.substack_session_id = cleanToken;
+  if (handle) {
+    existingConfig.substack_handle = handle;
+  }
+
+  fs.writeFileSync(configPath, JSON.stringify(existingConfig, null, 2), 'utf-8');
   console.log(`✅ Session configuration saved to hidden user store: ${configPath}`);
+
+  // Sync to local .env file if it exists in current working directory
+  const localEnvPath = path.join(process.cwd(), '.env');
+  if (fs.existsSync(localEnvPath)) {
+    try {
+      let envContent = fs.readFileSync(localEnvPath, 'utf-8');
+      if (envContent.includes('SUBSTACK_SESSION_ID=')) {
+        envContent = envContent.replace(/SUBSTACK_SESSION_ID=.*/g, `SUBSTACK_SESSION_ID="${cleanToken}"`);
+      } else {
+        envContent += `\nSUBSTACK_SESSION_ID="${cleanToken}"`;
+      }
+      if (handle) {
+        if (envContent.includes('SUBSTACK_HANDLE=')) {
+          envContent = envContent.replace(/SUBSTACK_HANDLE=.*/g, `SUBSTACK_HANDLE="${handle}"`);
+        } else {
+          envContent += `\nSUBSTACK_HANDLE="${handle}"`;
+        }
+      }
+      fs.writeFileSync(localEnvPath, envContent, 'utf-8');
+      console.log(`✅ Synced updated credentials to local .env file: ${localEnvPath}`);
+    } catch {}
+  }
 }
 
 export function getAuthInstructions(): string {

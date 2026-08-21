@@ -115,11 +115,23 @@ SNAP resolves credentials in the following resolution order:
    ```
 
 ### Request Headers & Endpoint
-- **Endpoint**: `POST https://substack.com/api/v1/comment`
+- **Primary Notes Endpoint**: `POST https://substack.com/api/v1/comment/feed`
+- **Fallback Subdomain Endpoint**: `POST https://<handle>.substack.com/api/v1/comment/feed`
+- **Delete Endpoint**: `DELETE https://substack.com/api/v1/comment/feed/<note_id>`
 - **Headers**:
   - `Cookie: substack.sid=<SUBSTACK_SESSION_ID>`
   - `Content-Type: application/json`
+  - `Accept: application/json, text/plain, */*`
+  - `Origin: https://substack.com`
+  - `Referer: https://substack.com/notes`
   - `User-Agent: Mozilla/5.0 ...`
+
+### 4.1 Cloudflare Enterprise WAF Security Boundary
+Substack's `POST /api/v1/comment/feed` endpoint is protected by Cloudflare Enterprise Bot Management. Cloudflare verifies JA3/JA4 TLS Client Hello signatures on incoming TCP connections:
+- Programmatic HTTP clients (Node `fetch`, `axios`, `curl`) are intercepted at the TLS layer before reaching Substack app servers and returned `HTTP 403 (Forbidden)`.
+- Live automated execution requires a browser execution context (Chrome DevTools console or Playwright/Puppeteer automation driver).
+
+---
 
 ### 4.2 Substack ProseMirror Document JSON Payload Schema
 

@@ -119,8 +119,8 @@ snap create --body "Stripe and OpenRouter are building the financial rail for AI
 
 To publish live notes and sync private stats, SNAP resolves credentials in the following resolution order:
 1. Shell Environment Variables (`SUBSTACK_SESSION_ID` & `SUBSTACK_HANDLE`)
-2. Local `.env` file in execution directory, `~/.snap/.env`, or project root
-3. Hidden user configuration file in `~/.snap/config.json`
+2. Hidden user configuration file in `~/.snap/config.json`
+3. Local `.env` file in execution directory, `~/.snap/.env`, or project root
 
 ### Environment Variable Schema
 
@@ -130,33 +130,38 @@ To publish live notes and sync private stats, SNAP resolves credentials in the f
 | `SUBSTACK_HANDLE` | Optional | Your Substack account handle | `yourusername` |
 | `SNAP_DATA_DIR` | Optional | Custom data store directory (defaults to `~/.snap`) | `./my-data` |
 
-### How to get your session cookie:
-1. Log into `https://substack.com` in Google Chrome.
-2. Open Chrome Developer Tools (`Cmd + Option + I`).
-3. Select **Application** -> **Cookies** -> `https://substack.com`.
-4. Locate cookie `substack.sid` and copy its value (starts with `s%3A...`).
+---
 
-### How to configure:
+## 🛡️ Live Publishing & Cloudflare WAF Security Notice
 
-**Option A: Local or User `.env` file**:
-Create a `.env` file in your current directory or in `~/.snap/.env`:
-```env
-SUBSTACK_SESSION_ID="s%3A..."
-SUBSTACK_HANDLE="yourusername"
+Substack protects write API endpoints (`POST /api/v1/comment/feed`) using **Cloudflare Enterprise WAF Bot Management**. 
+
+- **Direct HTTP Clients & Node `fetch`**: Raw HTTP clients (Node `fetch`, `axios`, `curl`) are intercepted at the TLS layer via **JA3/JA4 TLS Fingerprinting** and rejected with **HTTP 403 (Forbidden)** HTML fallback pages.
+- **Session Credentials**: Session tokens (`substack.sid`) copied from Safari table views may be truncated. Always copy full, untruncated cookie strings from Chrome or the Network Tab headers.
+
+### Alternate Publishing Solutions
+
+#### 1. In-Browser Console Dispatcher (100% Reliable & Fast)
+Because your web browser contains genuine TLS fingerprints and active Cloudflare clearance tokens, running the POST payload directly inside `https://substack.com/notes` succeeds immediately:
+
+```javascript
+fetch('https://substack.com/api/v1/comment/feed', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    body: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Your note body here #hashtag" }] }] },
+    bodyJson: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Your note body here #hashtag" }] }] },
+    tab: "notes",
+    replyCount: 0
+  })
+}).then(r => r.json()).then(console.log);
 ```
 
-**Option B: CLI command**:
-```bash
-snap auth --set "s%3A..." --handle "yourusername"
-```
-
-**Option C: Shell Export**:
-```bash
-export SUBSTACK_SESSION_ID="s%3A..."
-export SUBSTACK_HANDLE="yourusername"
-```
+#### 2. Headless Browser Automation (Playwright / Puppeteer Roadmap)
+To achieve 100% automated CLI posting without Cloudflare WAF interception, SNAP is adding a Playwright/Puppeteer browser automation engine ([Issue #001](.github/ISSUES/001-playwright-puppeteer-publishing.md)).
 
 ---
+
 
 ## 🏛️ System Architecture
 
