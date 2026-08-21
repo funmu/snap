@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
-[![Node](https://img.shields.io/badge/Node-v18+-green.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/Node-v20+-green.svg)](https://nodejs.org/)
 
 **SNAP** (Substack Notes Authoring Platform) is a unified, 100% TypeScript CLI toolset for creating, publishing, clustering, monitoring, and managing Substack Notes.
 
@@ -45,7 +45,7 @@ snap help
 Without linking globally:
 
 ```bash
-npx tsx cli.ts help
+npx tsx src/cli.ts help
 ```
 
 ---

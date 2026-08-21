@@ -1,7 +1,14 @@
+# Node & Build
+node_modules/
+dist/
+
 # SNAP Local Data Ignore
-*.json
-!package.json
 .snap_config.json
 notes_db.json
 snap_export.json
 .env
+
+# Track package manifests & samples
+!package.json
+!package-lock.json
+!samples/*.json

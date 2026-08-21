@@ -25,16 +25,16 @@ It provides:
 ```mermaid
 graph TD
     Browser[Substack Profile / Notes Tab] -->|extract_v2.js| RawJSON[substack_notes_inventory.json]
-    RawJSON --> Ingest[ingest.ts]
+    RawJSON --> Ingest[src/ingest.ts]
     Ingest --> DB[(db.json / Database)]
     
-    DB --> Topics[topics.ts - Topic Clustering]
+    DB --> Topics[src/topics.ts - Topic Clustering]
     Topics --> TopicClusters[Topic Clusters & Prompt Generator]
     
     Draft[cli.ts / Web Admin UI] -->|Author & Validate| CreateNote[Note Creator]
     TopicClusters -->|Post Ideas| CreateNote
     
-    CreateNote --> Publisher[publisher.ts]
+    CreateNote --> Publisher[src/publisher.ts]
     Auth[auth.ts - substack.sid] --> Publisher
     Publisher -->|POST /api/v1/comment| SubstackAPI[Substack Backend]
 ```
@@ -183,7 +183,7 @@ Substack's rich text editor engine uses **ProseMirror** (a structured document o
 }
 ```
 
-#### 3. SNAP ProseMirror Conversion Logic (`publisher.ts`)
+#### 3. SNAP ProseMirror Conversion Logic (`src/publisher.ts`)
 SNAP converts plain markdown/text into valid ProseMirror document trees via `convertTextToProseMirrorDoc(text)`:
 
 ```typescript
@@ -216,7 +216,7 @@ SNAP analyzes notes by:
 1. **CLI Execution**: `snap <command>`
 2. **Node/Backend API**: Import modules directly from `src/snap/`:
    ```typescript
-   import { FileStorageAdapter } from 'substack-snap/store';
-   import { buildTopicClusters } from 'substack-snap/topics';
+   import { FileStorageAdapter } from 'substack-snap';
+   import { buildTopicClusters } from 'substack-snap';
    ```
 3. **Web Dashboard**: Expose REST/GraphQL endpoints wrapping `ingest`, `topics`, `create`, and `publisher` functions.
