@@ -1,0 +1,31 @@
+name: Bug report
+description: Create a report to help us improve SNAP
+title: '[BUG] '
+labels: ['bug']
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: What CLI commands or code invocations triggered the bug?
+      placeholder: |
+        1. snap ingest sample.json
+        2. snap topics
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS version, Node.js version, SNAP version.
+      value: |
+        - OS: macOS / Linux / Windows
+        - Node version: v22.x
+        - SNAP version: v1.0.0

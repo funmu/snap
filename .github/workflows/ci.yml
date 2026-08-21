@@ -1,0 +1,38 @@
+name: SNAP CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: TypeScript Build Check
+        run: npm run build
+
+      - name: Test CLI Sanity
+        run: |
+          npx tsx src/cli.ts help
+          npx tsx src/cli.ts ingest samples/sample_notes.json
+          npx tsx src/cli.ts topics
+          npx tsx src/cli.ts config

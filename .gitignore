@@ -1,0 +1,7 @@
+# SNAP Local Data Ignore
+*.json
+!package.json
+.snap_config.json
+notes_db.json
+snap_export.json
+.env

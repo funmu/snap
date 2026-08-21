@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest an idea or new capability for SNAP
+title: '[FEATURE] '
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem or missing workflow?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution or new CLI command you'd like to see added.
+    validations:
+      required: true
